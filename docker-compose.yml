@@ -1,0 +1,69 @@
+version: "3.7"
+services:
+  nginx:
+    image: nginx:1.16-alpine
+    container_name: nginx_test
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./api:/var/www/api
+      - ./client:/var/www/client
+      - ./docker/nginx:/etc/nginx/conf.d/
+    networks:
+      - test
+
+  db:
+    image: mysql:5.7.22
+    container_name: db_test
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: project
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: test
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./db_data:/var/lib/mysql
+      - ./docker/mysql:/etc/mysql/conf.d
+    networks:
+      - test
+
+  backend:
+    build:
+      args:
+        user: root
+        uid: 1000
+      context: ./docker
+      dockerfile: Dockerfile
+    tty: true
+    container_name: backend_test
+    restart: unless-stopped
+    working_dir: /var/www/api
+    volumes:
+      - ./api:/var/www/api
+    networks:
+      - test
+
+  frontend:
+    image: node:current-alpine
+    container_name: frontend_test
+    tty: true
+    volumes:
+      - ./client:/client
+    working_dir: /client
+    environment:
+      NODE_ENV: development
+    networks:
+      - test
+
+volumes:
+  db_data:
+
+networks:
+  test:
+    driver: bridge
