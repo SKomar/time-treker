@@ -1,7 +1,7 @@
 ## Installation
 **1. Build docker container and start**
 ```
-docker-compose up -d
+make install
 ```
 
 **2. Change .env database connect to**
